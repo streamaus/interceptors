@@ -44,13 +44,13 @@
     },
     "./RemoteHttpInterceptor": {
       "node": {
-        "require": "./lib/node/RemoteHttpInterceptor.cjs",
-        "import": "./lib/node/RemoteHttpInterceptor.mjs"
+        "require": "./lib/node/RemoteHttpInterceptor/index.cjs",
+        "import": "./lib/node/RemoteHttpInterceptor/index.mjs"
       },
       "browser": null,
-      "require": "./lib/node/RemoteHttpInterceptor.cjs",
-      "import": "./lib/node/RemoteHttpInterceptor.mjs",
-      "default": "./lib/node/RemoteHttpInterceptor.cjs"
+      "require": "./lib/node/RemoteHttpInterceptor/index.cjs",
+      "import": "./lib/node/RemoteHttpInterceptor/index.mjs",
+      "default": "./lib/node/RemoteHttpInterceptor/index.cjs"
     },
     "./presets/node": {
       "node": {
