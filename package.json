@@ -60,15 +60,15 @@
       "default": "./lib/browser/interceptors/WebSocket/index.js"
     },
     "./RemoteHttpInterceptor": {
-      "types": "./lib/node/RemoteHttpInterceptor.d.ts",
+      "types": "./lib/node/RemoteHttpInterceptor/index.d.ts",
       "node": {
-        "require": "./lib/node/RemoteHttpInterceptor.js",
-        "import": "./lib/node/RemoteHttpInterceptor.mjs"
+        "require": "./lib/node/RemoteHttpInterceptor/index.js",
+        "import": "./lib/node/RemoteHttpInterceptor/index.mjs"
       },
       "browser": null,
-      "require": "./lib/node/RemoteHttpInterceptor.js",
-      "import": "./lib/node/RemoteHttpInterceptor.mjs",
-      "default": "./lib/node/RemoteHttpInterceptor.js"
+      "require": "./lib/node/RemoteHttpInterceptor/index.js",
+      "import": "./lib/node/RemoteHttpInterceptor/index.mjs",
+      "default": "./lib/node/RemoteHttpInterceptor/index.js"
     },
     "./presets/node": {
       "types": "./lib/node/presets/node.d.ts",

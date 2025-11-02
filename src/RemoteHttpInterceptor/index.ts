@@ -1,14 +1,16 @@
-import { ChildProcess } from 'child_process'
-import { HttpRequestEventMap } from './glossary'
-import { Interceptor } from './Interceptor'
-import { BatchInterceptor } from './BatchInterceptor'
-import { ClientRequestInterceptor } from './interceptors/ClientRequest'
-import { XMLHttpRequestInterceptor } from './interceptors/XMLHttpRequest'
-import { FetchInterceptor } from './interceptors/fetch'
-import { handleRequest } from './utils/handleRequest'
-import { RequestController } from './RequestController'
-import { FetchResponse } from './utils/fetchUtils'
-import { isResponseError } from './utils/responseUtils'
+import type { HttpRequestEventMap } from '../glossary'
+import { Interceptor } from '../Interceptor'
+import { BatchInterceptor, type ExtractEventMapType } from '../BatchInterceptor'
+import type { ClientRequestInterceptor } from '../interceptors/ClientRequest'
+import type { XMLHttpRequestInterceptor } from '../interceptors/XMLHttpRequest'
+import type { FetchInterceptor } from '../interceptors/fetch'
+import { handleRequest } from '../utils/handleRequest'
+import { RequestController } from '../RequestController'
+import { FetchResponse } from '../utils/fetchUtils'
+import { isResponseError } from '../utils/responseUtils'
+import type { RemoteHttpTransport } from './transports'
+
+export * from './transports'
 
 export interface SerializedRequest {
   id: string
@@ -31,28 +33,50 @@ export interface SerializedResponse {
   body: string
 }
 
-export class RemoteHttpInterceptor extends BatchInterceptor<
-  [ClientRequestInterceptor, XMLHttpRequestInterceptor, FetchInterceptor]
+type SupportedInterceptor = ClientRequestInterceptor | XMLHttpRequestInterceptor | FetchInterceptor;
+type SupportedInterceptorEvents = ExtractEventMapType<[SupportedInterceptor]>
+type SupportedInterceptors = ReadonlyArray<Interceptor<SupportedInterceptorEvents>>
+
+/**
+ * Options for creating a RemoteHttpInterceptor instance.
+ */
+export interface RemoteHttpInterceptorOptions<Interceptors extends SupportedInterceptors> {
+  /**
+   * Custom transport instance to use for communication.
+   */
+  transport: RemoteHttpTransport
+  interceptors: Interceptors
+}
+
+export class RemoteHttpInterceptor<Interceptors extends SupportedInterceptors> extends BatchInterceptor<
+  Interceptors, SupportedInterceptorEvents
 > {
-  constructor() {
+  private transport: RemoteHttpTransport
+
+  constructor(options: RemoteHttpInterceptorOptions<Interceptors>) {
     super({
       name: 'remote-interceptor',
-      interceptors: [
-        new ClientRequestInterceptor(),
-        new XMLHttpRequestInterceptor(),
-        new FetchInterceptor(),
-      ],
+      interceptors: options.interceptors,
     })
+
+    this.transport = options.transport
   }
 
   protected setup() {
     super.setup()
 
-    let handleParentMessage: NodeJS.MessageListener
+    // Check if transport is available
+    if (!this.transport.isAvailable()) {
+      this.logger.error(
+        'transport is not available in the current environment',
+        this.transport.constructor.name
+      )
+      return
+    }
 
     this.on('request', async ({ request, requestId, controller }) => {
       // Send the stringified intercepted request to
-      // the parent process where the remote resolver is established.
+      // the remote resolver via transport.
       const serializedRequest = JSON.stringify({
         id: requestId,
         method: request.method,
@@ -65,18 +89,15 @@ export class RemoteHttpInterceptor extends BatchInterceptor<
       } as SerializedRequest)
 
       this.logger.info(
-        'sent serialized request to the child:',
+        'sending serialized request via transport:',
         serializedRequest
       )
 
-      process.send?.(`request:${serializedRequest}`)
+      this.transport.send(`request:${serializedRequest}`)
 
-      const responsePromise = new Promise<void>((resolve) => {
-        handleParentMessage = (message) => {
-          if (typeof message !== 'string') {
-            return resolve()
-          }
-
+      return new Promise<void>((resolve) => {
+        // Set up message handler for this request
+        const unsubscribe = this.transport.addMessageListener((message) => {
           if (message.startsWith(`response:${requestId}`)) {
             const [, serializedResponse] =
               message.match(/^response:.+?:(.+)$/) || []
@@ -102,23 +123,18 @@ export class RemoteHttpInterceptor extends BatchInterceptor<
              */
 
             controller.respondWith(mockedResponse)
+
+            // Clean up the message handler for this request
+            unsubscribe()
             return resolve()
           }
-        }
+        })
       })
-
-      // Listen for the mocked response message from the parent.
-      this.logger.info(
-        'add "message" listener to the parent process',
-        handleParentMessage
-      )
-      process.addListener('message', handleParentMessage)
-
-      return responsePromise
     })
 
+    // Add transport cleanup to subscriptions
     this.subscriptions.push(() => {
-      process.removeListener('message', handleParentMessage)
+      this.transport.dispose()
     })
   }
 }
@@ -136,26 +152,47 @@ export function requestReviver(key: string, value: any) {
   }
 }
 
-export interface RemoveResolverOptions {
-  process: ChildProcess
+/**
+ * Options for creating a RemoteHttpResolver instance.
+ */
+export interface RemoteHttpResolverOptions {
+  /**
+   * Custom transport instance to use for communication.
+   */
+  transport: RemoteHttpTransport
 }
 
 export class RemoteHttpResolver extends Interceptor<HttpRequestEventMap> {
   static symbol = Symbol('remote-resolver')
-  private process: ChildProcess
+  private transport: RemoteHttpTransport
 
-  constructor(options: RemoveResolverOptions) {
+  /**
+   * Create a new RemoteHttpResolver instance.
+   *
+   * @param options Options for creating the resolver
+   */
+  constructor(options: RemoteHttpResolverOptions) {
     super(RemoteHttpResolver.symbol)
-    this.process = options.process
+    this.transport = options.transport
   }
 
   protected setup() {
     const logger = this.logger.extend('setup')
 
-    const handleChildMessage: NodeJS.MessageListener = async (message) => {
-      logger.info('received message from child!', message)
+    // Check if transport is available
+    if (!this.transport.isAvailable()) {
+      logger.error(
+        'transport is not available in the current environment',
+        this.transport.constructor.name
+      )
+      return
+    }
 
-      if (typeof message !== 'string' || !message.startsWith('request:')) {
+    // Set up message handler for incoming requests
+    this.transport.addMessageListener(async (message) => {
+      logger.info('received message via transport!', message)
+
+      if (!message.startsWith('request:')) {
         logger.info('unknown message, ignoring...')
         return
       }
@@ -192,7 +229,9 @@ export class RemoteHttpResolver extends Interceptor<HttpRequestEventMap> {
           const responseClone = response.clone()
           const responseText = await responseClone.text()
 
-          // // Send the mocked response to the child process.
+          response.headers.delete('content-encoding')
+
+          // Send the mocked response via transport
           const serializedResponse = JSON.stringify({
             status: response.status,
             statusText: response.statusText,
@@ -200,26 +239,19 @@ export class RemoteHttpResolver extends Interceptor<HttpRequestEventMap> {
             body: responseText,
           } as SerializedResponse)
 
-          this.process.send(
-            `response:${requestJson.id}:${serializedResponse}`,
-            (error) => {
-              if (error) {
-                return
-              }
+          this.transport.send(`response:${requestJson.id}:${serializedResponse}`)
 
-              // Emit an optimistic "response" event at this point,
-              // not to rely on the back-and-forth signaling for the sake of the event.
-              this.emitter.emit('response', {
-                request,
-                requestId: requestJson.id,
-                response: responseClone,
-                isMockedResponse: true,
-              })
-            }
-          )
+          // Emit an optimistic "response" event at this point,
+          // not to rely on the back-and-forth signaling for the sake of the event.
+          this.emitter.emit('response', {
+            request,
+            requestId: requestJson.id,
+            response: responseClone,
+            isMockedResponse: true,
+          })
 
           logger.info(
-            'sent serialized mocked response to the parent:',
+            'sent serialized mocked response via transport:',
             serializedResponse
           )
         },
@@ -235,17 +267,13 @@ export class RemoteHttpResolver extends Interceptor<HttpRequestEventMap> {
         controller,
         emitter: this.emitter,
       })
-    }
-
-    this.subscriptions.push(() => {
-      this.process.removeListener('message', handleChildMessage)
-      logger.info('removed the "message" listener from the child process!')
     })
 
-    logger.info('adding a "message" listener to the child process')
-    this.process.addListener('message', handleChildMessage)
+    // Add transport cleanup to subscriptions
+    this.subscriptions.push(() => {
+      this.transport.dispose()
+    })
 
-    this.process.once('error', () => this.dispose())
-    this.process.once('exit', () => this.dispose())
+    logger.info('transport setup complete')
   }
 }
