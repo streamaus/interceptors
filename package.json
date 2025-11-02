@@ -1,5 +1,5 @@
 {
-  "name": "@mswjs/interceptors",
+  "name": "@streamaus/interceptors",
   "description": "Low-level HTTP/HTTPS/XHR/fetch request interception library.",
   "version": "0.40.0",
   "main": "./lib/node/index.js",

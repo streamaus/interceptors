@@ -1,4 +1,4 @@
-import { FetchInterceptor } from '@mswjs/interceptors/fetch'
+import { FetchInterceptor } from '@streamaus/interceptors/fetch'
 
 const interceptor = new FetchInterceptor()
 window.interceptor = interceptor

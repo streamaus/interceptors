@@ -1,4 +1,4 @@
-import { XMLHttpRequestInterceptor } from '@mswjs/interceptors/XMLHttpRequest'
+import { XMLHttpRequestInterceptor } from '@streamaus/interceptors/XMLHttpRequest'
 
 const interceptor = new XMLHttpRequestInterceptor()
 

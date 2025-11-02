@@ -10,7 +10,7 @@ const webpackConfig: webpack.Configuration = {
   ],
   resolve: {
     alias: {
-      '@mswjs/interceptors': path.resolve(__dirname, '..'),
+      '@streamaus/interceptors': path.resolve(__dirname, '..'),
     },
   },
 }

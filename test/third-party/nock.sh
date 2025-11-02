@@ -17,8 +17,8 @@ git clone https://github.com/nock/nock.git .
 echo "Installing dependencies..."
 npm ci
 
-echo "Linking @mswjs/interceptors..."
-npm link @mswjs/interceptors
+echo "Linking @streamaus/interceptors..."
+npm link @streamaus/interceptors
 
 echo "Running Nock tests..."
 npm test
