@@ -1,4 +1,4 @@
-import { WebSocketInterceptor } from '@mswjs/interceptors/WebSocket'
+import { WebSocketInterceptor } from '@streamaus/interceptors/WebSocket'
 
 window.interceptor = new WebSocketInterceptor()
 window.outgoingData = []

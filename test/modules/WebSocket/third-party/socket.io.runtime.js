@@ -1,4 +1,4 @@
-import { WebSocketInterceptor } from '@mswjs/interceptors/WebSocket'
+import { WebSocketInterceptor } from '@streamaus/interceptors/WebSocket'
 import { Encoder, Decoder } from 'socket.io-parser'
 import { encodePacket, decodePacket } from 'engine.io-parser'
 

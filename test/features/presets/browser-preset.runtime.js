@@ -1,5 +1,5 @@
-import { BatchInterceptor } from '@mswjs/interceptors'
-import browserInterceptors from '@mswjs/interceptors/presets/browser'
+import { BatchInterceptor } from '@streamaus/interceptors'
+import browserInterceptors from '@streamaus/interceptors/presets/browser'
 
 const interceptor = new BatchInterceptor({
   name: 'browser-preset-interceptor',

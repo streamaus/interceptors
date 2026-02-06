@@ -1,6 +1,6 @@
-[![Latest version](https://img.shields.io/npm/v/@mswjs/interceptors.svg)](https://www.npmjs.com/package/@mswjs/interceptors)
+[![Latest version](https://img.shields.io/npm/v/@streamaus/interceptors.svg)](https://www.npmjs.com/package/@streamaus/interceptors)
 
-# `@mswjs/interceptors`
+# `@streamaus/interceptors`
 
 Low-level network interception library.
 
@@ -122,7 +122,7 @@ req.on('socket', (socket) => {
 ## Getting started
 
 ```bash
-npm install @mswjs/interceptors
+npm install @streamaus/interceptors
 ```
 
 ## Interceptors
@@ -136,7 +136,7 @@ To use this library you need to choose one or multiple interceptors to apply. Th
 Use an interceptor by constructing it and attaching request/response listeners:
 
 ```js
-import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest'
+import { ClientRequestInterceptor } from '@streamaus/interceptors/ClientRequest'
 
 const interceptor = new ClientRequestInterceptor()
 
@@ -169,9 +169,9 @@ All HTTP request interceptors implement the same events:
 You can combine multiple interceptors to capture requests from different request-issuing modules at once.
 
 ```js
-import { BatchInterceptor } from '@mswjs/interceptors'
-import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest'
-import { XMLHttpRequestInterceptor } from '@mswjs/interceptors/XMLHttpRequest'
+import { BatchInterceptor } from '@streamaus/interceptors'
+import { ClientRequestInterceptor } from '@streamaus/interceptors/ClientRequest'
+import { XMLHttpRequestInterceptor } from '@streamaus/interceptors/XMLHttpRequest'
 
 const interceptor = new BatchInterceptor({
   name: 'my-interceptor',
@@ -199,8 +199,8 @@ When using [`BatchInterceptor`](#batchinterceptor), you can provide a pre-define
 This preset combines `ClientRequestInterceptor`, `XMLHttpRequestInterceptor` and is meant to be used in Node.js.
 
 ```js
-import { BatchInterceptor } from '@mswjs/interceptors'
-import nodeInterceptors from '@mswjs/interceptors/presets/node'
+import { BatchInterceptor } from '@streamaus/interceptors'
+import nodeInterceptors from '@streamaus/interceptors/presets/node'
 
 const interceptor = new BatchInterceptor({
   name: 'my-interceptor',
@@ -217,8 +217,8 @@ interceptor.on('request', listener)
 This preset combines `XMLHttpRequestInterceptor` and `FetchInterceptor` and is meant to be used in a browser.
 
 ```js
-import { BatchInterceptor } from '@mswjs/interceptors'
-import browserInterceptors from '@mswjs/interceptors/presets/browser'
+import { BatchInterceptor } from '@streamaus/interceptors'
+import browserInterceptors from '@streamaus/interceptors/presets/browser'
 
 const interceptor = new BatchInterceptor({
   name: 'my-interceptor',
@@ -384,7 +384,7 @@ You can intercept a WebSocket communication using the `WebSocketInterceptor` cla
 > This library only supports intercepting WebSocket connections created using the global WHATWG `WebSocket` class. Third-party transports, such as HTTP/XHR polling, are not supported by design due to their contrived nature.
 
 ```js
-import { WebSocketInterceptor } from '@mswjs/interceptors/WebSocket'
+import { WebSocketInterceptor } from '@streamaus/interceptors/WebSocket'
 
 const interceptor = new WebSocketInterceptor()
 ```
@@ -563,8 +563,8 @@ class Interceptor {
 Applies multiple request interceptors at the same time.
 
 ```js
-import { BatchInterceptor } from '@mswjs/interceptors'
-import nodeInterceptors from '@mswjs/interceptors/presets/node'
+import { BatchInterceptor } from '@streamaus/interceptors'
+import nodeInterceptors from '@streamaus/interceptors/presets/node'
 
 const interceptor = new BatchInterceptor({
   name: 'my-interceptor',
@@ -587,8 +587,8 @@ Enables request interception in the current process while delegating the respons
 
 ```js
 // child.js
-import { RemoteHttpInterceptor } from '@mswjs/interceptors/RemoteHttpInterceptor'
-import { ClientRequestInterceptor } from '@mswjs/interceptors/ClientRequest'
+import { RemoteHttpInterceptor } from '@streamaus/interceptors/RemoteHttpInterceptor'
+import { ClientRequestInterceptor } from '@streamaus/interceptors/ClientRequest'
 
 const interceptor = new RemoteHttpInterceptor({
   // Alternatively, you can use presets.
@@ -611,7 +611,7 @@ Resolves an intercepted request in the given child `process`. Requires for that 
 ```js
 // parent.js
 import { spawn } from 'child_process'
-import { RemoteHttpResolver } from '@mswjs/interceptors/RemoteHttpInterceptor'
+import { RemoteHttpResolver } from '@streamaus/interceptors/RemoteHttpInterceptor'
 
 const appProcess = spawn('node', ['app.js'], {
   stdio: ['inherit', 'inherit', 'inherit', 'ipc'],
