@@ -106,7 +106,7 @@
     "presets"
   ],
   "repository": {
-    "url": "https://github.com/mswjs/interceptors"
+    "url": "https://github.com/streamaus/interceptors"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.7.1",
