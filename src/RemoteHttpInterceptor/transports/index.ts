@@ -8,21 +8,21 @@
 
 export {
   RemoteHttpTransport,
-  RemoteHttpTransportOptions,
-  RemoteHttpTransportMessageHandler,
-  RemoteHttpTransportSubscription,
+  type RemoteHttpTransportOptions,
+  type RemoteHttpTransportMessageHandler,
+  type RemoteHttpTransportSubscription,
 } from './RemoteHttpTransport'
 
 export {
   ChildProcessRemoteHttpInterceptorTransport,
-  ChildProcessRemoteHttpInterceptorTransportOptions,
+  type ChildProcessRemoteHttpInterceptorTransportOptions,
   ChildProcessRemoteHttpResolverTransport,
-  ChildProcessRemoteHttpResolverTransportOptions
+  type ChildProcessRemoteHttpResolverTransportOptions
 } from './ChildProcessRemoteHttpTransport'
 
 export {
   IframeRemoteHttpInterceptorTransport,
-  IframeRemoteHttpInterceptorTransportOptions,
+  type IframeRemoteHttpInterceptorTransportOptions,
   IframeRemoteHttpResolverTransport,
-  IframeRemoteHttpResolverTransportOptions
+  type IframeRemoteHttpResolverTransportOptions
 } from './IframeRemoteHttpTransport'
